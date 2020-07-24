@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/muncus/writing/devto"
+	"github.com/muncus/devto-publish-action/devto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
