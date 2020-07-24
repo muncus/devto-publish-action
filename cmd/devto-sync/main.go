@@ -54,6 +54,6 @@ func main() {
 
 	err = devtoSyncer.DumpState(*stateFile)
 	if err != nil {
-		fmt.Println("Failed to dump state: %s", err)
+		fmt.Println("Failed to dump state:", err)
 	}
 }
