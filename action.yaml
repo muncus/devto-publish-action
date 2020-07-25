@@ -1,0 +1,24 @@
+name: 'Dev.to Publish'
+description: 'publish local markdown directory to dev.to'
+inputs:
+  directory:
+    description: 'directory containing markdown posts'
+    required: true
+  api-key:
+    description: 'dev.to api key, used to publish posts.'
+    required: true
+  state-file:
+    description: 'json state file mapping files to known post Ids'
+    required: false
+    default: "ids.json"
+outputs:
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - "--state"
+    - ${{ inputs.state-file }}
+    - "--apikey"
+    - ${{ inputs.api-key }}
+    - "--posts_dir"
+    - ${{ inputs.directory }}
