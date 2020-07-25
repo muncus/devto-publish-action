@@ -6,4 +6,4 @@ WORKDIR $GOPATH/github.com/muncus/devto-publish-action
 RUN go get -d -v ./...
 RUN go build -o /devto-sync ./cmd/devto-sync
 
-ENTRYPOINT ["sh", "-c", "/devto-sync", "$@"]
+ENTRYPOINT ["sh", "-c", "/devto-sync",]
