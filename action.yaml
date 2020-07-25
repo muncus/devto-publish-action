@@ -20,5 +20,5 @@ runs:
     - ${{ inputs.state-file }}
     - "--apikey"
     - ${{ inputs.api-key }}
-    - "--posts_dir"
+    - "--post_dir"
     - ${{ inputs.directory }}
