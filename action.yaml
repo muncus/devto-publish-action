@@ -15,7 +15,6 @@ outputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
-  entrypoint: '/bin/sh -c echo '
   args:
     - "--apikey ${{ inputs.api-key }}"
     - "--state"
