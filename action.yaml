@@ -16,7 +16,8 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - "--apikey ${{ inputs.api-key }}"
+    - "--apikey"
+    - "${{ inputs.api-key }}"
     - "--state"
     - ${{ inputs.state-file }}
     - "--post_dir"
