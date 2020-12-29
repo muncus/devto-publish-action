@@ -15,6 +15,7 @@ var stateFile = flag.String("state", "", "File containing a YAML/Json map from f
 var postFiles = flag.String("post_files", "", "Comma-separated list of files to upload.")
 var postDir = flag.String("post_dir", "", "A directory containing posts to upload.")
 var apiKey = flag.String("apikey", "", "Dev.to api key")
+var debugFlag = flag.Bool("debug", false, "Dump http request and response, for debugging")
 
 func main() {
 	flag.Parse()
@@ -35,6 +36,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
+	devtoSyncer.SetDebug(*debugFlag)
 
 	if len(*postFiles) > 0 {
 		filesToSync := strings.Split(*postFiles, ",")

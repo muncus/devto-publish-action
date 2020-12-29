@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 )
 
 var defaultBaseURL = "https://dev.to/api"
@@ -16,6 +17,7 @@ type Client struct {
 	apiKey  string
 	baseURL string
 	http    *http.Client
+	Debug   bool
 }
 
 // NewClient creates a new client, given a dev.to api key.
@@ -40,7 +42,7 @@ func (c *Client) UpsertArticle(art *Article, body io.Reader) (*Article, error) {
 	// If a body is not specified as io.Reader, read it from the struct.
 	if body == nil {
 		buf := new(bytes.Buffer)
-		err := json.NewEncoder(buf).Encode(art)
+		err := json.NewEncoder(buf).Encode(map[string]*Article{"article": art})
 		if err != nil {
 			return nil, fmt.Errorf("Error encoding request object: %s", err)
 		}
@@ -58,8 +60,10 @@ func (c *Client) UpsertArticle(art *Article, body io.Reader) (*Article, error) {
 		return nil, fmt.Errorf("Failed to create Request object: %s", err)
 	}
 
-	// dump, err := httputil.DumpRequest(req, true)
-	// fmt.Println(string(dump))
+	if c.Debug {
+		dump, _ := httputil.DumpRequest(req, true)
+		fmt.Println(string(dump))
+	}
 
 	r, err := c.do(req)
 	if err != nil {
@@ -73,8 +77,11 @@ func (c *Client) UpsertArticle(art *Article, body io.Reader) (*Article, error) {
 		return nil, fmt.Errorf("dev.to api replied with %s: %s", r.Status, body)
 	}
 	defer r.Body.Close()
-	// dump, err = httputil.DumpResponse(r, true)
-	// fmt.Println(string(dump))
+
+	if c.Debug {
+		dump, _ := httputil.DumpResponse(r, true)
+		fmt.Println(string(dump))
+	}
 
 	newArticle := &Article{}
 	err = json.NewDecoder(r.Body).Decode(newArticle)

@@ -36,6 +36,11 @@ func NewSyncer(statefile string, apikey string) (*Syncer, error) {
 	return s, nil
 }
 
+// SetDebug enables debugging on the dev.to client used to sync.
+func (s *Syncer) SetDebug(d bool) {
+	s.client.Debug = d
+}
+
 func (s *Syncer) LoadState(file string) error {
 	b, err := ioutil.ReadFile(file)
 	if err == os.ErrNotExist {
