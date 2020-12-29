@@ -43,7 +43,7 @@ func main() {
 			if err != nil {
 				log.Error().Str("file", file).Msg(fmt.Sprintf("Sync Failed: %s", err))
 			} else {
-				log.Error().Str("file", file).Msg("Success.")
+				log.Info().Str("file", file).Msg("Success.")
 			}
 		}
 	}
