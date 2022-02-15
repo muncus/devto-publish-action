@@ -3,6 +3,8 @@
 package devto
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -21,7 +23,9 @@ type Syncer struct {
 }
 
 type SyncerStateRecord struct {
-	Id int `json:"id"`
+	Id           int    `json:"id"`
+	BodyChecksum string `json:"checksum,omitempty"`
+	Skip         bool   `json:"skip,omitempty"`
 }
 
 // Used for testing
@@ -150,20 +154,35 @@ func (s *Syncer) SyncFile(file string) (*Article, error) {
 	a := &Article{
 		BodyMarkdown: string(bodycontent),
 	}
-	if _, ok := s.IDMap[file]; ok {
-		if s.IDMap[file] < 0 {
-			//This file was previously skipped.
-			return nil, fmt.Errorf("Skipping file with previous failures: %s", file)
-		}
-		// This file has been posted before. update.
-		a.ID = s.IDMap[file]
+	srecord := s.StateMap[file]
+	if srecord.Id < 0 || srecord.Skip {
+		//This file was previously skipped.
+		return nil, fmt.Errorf("Skipping file with previous failures: %s", file)
 	}
+	// This file has been posted before. update.
+	a.ID = srecord.Id
+
+	// Only attempt upload if content has changed.
+	if srecord.BodyChecksum == getChecksum(a.BodyMarkdown) {
+		return nil, fmt.Errorf("file checksums match, not updating")
+	}
+
 	newArticle, err := s.client.UpsertArticle(a, nil)
 	if err != nil {
-		s.IDMap[file] = -1
+		srecord := s.StateMap[file]
+		srecord.Skip = true
+		s.StateMap[file] = srecord
 		return nil, fmt.Errorf("Failed to update file '%s': %s", file, err)
 	}
 	// Update the state map, so we can Update it next time.
-	s.IDMap[file] = newArticle.ID
+	srecord.Id = newArticle.ID
+	srecord.BodyChecksum = getChecksum(a.BodyMarkdown)
+	s.StateMap[file] = srecord
 	return newArticle, nil
+}
+
+// getChecksum returns a suitable checksum to determine if article content has changed.
+func getChecksum(input string) string {
+	checksumbytes := sha256.Sum256([]byte(input))
+	return base64.StdEncoding.EncodeToString(checksumbytes[:])
 }
