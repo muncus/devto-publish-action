@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var stateFile = flag.String("state", "", "File containing a YAML/Json map from filename to dev.to post id.")
+var stateFile = flag.String("state", "", "File containing serialized version of post metadata.")
 var postFiles = flag.String("post_files", "", "Comma-separated list of files to upload.")
 var postDir = flag.String("post_dir", "", "A directory containing posts to upload.")
 var apiKey = flag.String("apikey", "", "Dev.to api key")

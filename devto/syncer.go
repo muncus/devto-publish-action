@@ -16,7 +16,21 @@ import (
 type Syncer struct {
 	StateFile string
 	IDMap     map[string]int
+	StateMap  map[string]SyncerStateRecord
 	client    *Client
+}
+
+type SyncerStateRecord struct {
+	Id int `json:"id"`
+}
+
+// Used for testing
+func NewEmptySyncer() *Syncer {
+	s := &Syncer{
+		IDMap:    make(map[string]int),
+		StateMap: make(map[string]SyncerStateRecord),
+	}
+	return s
 }
 
 func NewSyncer(statefile string, apikey string) (*Syncer, error) {
@@ -24,10 +38,10 @@ func NewSyncer(statefile string, apikey string) (*Syncer, error) {
 		StateFile: statefile,
 		client:    NewClient(apikey),
 		IDMap:     make(map[string]int),
+		StateMap:  make(map[string]SyncerStateRecord),
 	}
-	// s.IDMap = make(map[string]int)
 	if s.StateFile != "" {
-		err := s.LoadState(s.StateFile)
+		err := s.LoadStateFile(s.StateFile)
 		if err != nil {
 			s.IDMap = make(map[string]int)
 			return nil, err
@@ -41,21 +55,39 @@ func (s *Syncer) SetDebug(d bool) {
 	s.client.Debug = d
 }
 
-func (s *Syncer) LoadState(file string) error {
+func (s *Syncer) LoadStateFile(file string) error {
 	b, err := ioutil.ReadFile(file)
 	if err == os.ErrNotExist {
 		// File specified does not exist. use empty state.
-		s.IDMap = make(map[string]int)
+		s.StateMap = make(map[string]SyncerStateRecord)
 		return nil
 	}
 	if err != nil {
 		return err
 	}
+	return s.LoadState(b)
+}
+func (s *Syncer) LoadState(content []byte) error {
 	// fmt.Printf("%#v\n", s)
-	err = json.Unmarshal(b, &s.IDMap)
-	if err != nil {
-		return err
+	// try to unmarshal into "simple" format, with just IDs
+	err := json.Unmarshal(content, &s.IDMap)
+	if err == nil {
+		// old format seen, convert to SyncerStateRecords.
+		for k, v := range s.IDMap {
+			s.StateMap[k] = SyncerStateRecord{
+				Id: v,
+			}
+		}
+		return nil
+	} else {
+		// Attempt to unmarshal "new" format.
+		err = json.Unmarshal(content, &s.StateMap)
+		fmt.Printf("%#v\n", s.StateMap)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -67,7 +99,7 @@ func (s *Syncer) DumpState(file string) error {
 	defer b.Close()
 	encoder := json.NewEncoder(b)
 	encoder.SetIndent("", "    ")
-	err = encoder.Encode(&s.IDMap)
+	err = encoder.Encode(&s.StateMap)
 	if err != nil {
 		return err
 	}
