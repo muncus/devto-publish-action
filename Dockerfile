@@ -1,9 +1,10 @@
 # Dockerfile for custom github action
-FROM golang:1.14
+FROM golang:1.19
 
-COPY . $GOPATH/github.com/muncus/devto-publish-action
-RUN go get -d -v github.com/muncus/devto-publish-action/...
-RUN go build -o /devto-sync github.com/muncus/devto-publish-action/cmd/devto-sync
+RUN mkdir /app
+COPY . /app
+WORKDIR /app
+RUN go build -o /devto-sync ./cmd/devto-sync
 
 # ENTRYPOINT ["sh", "-c", "echo /devto-sync"]
 COPY entrypoint.sh /entrypoint.sh
